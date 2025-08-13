@@ -1,0 +1,91 @@
+---
+
+# `code/frw_plot.py`
+
+```python
+#!/usr/bin/env python3
+"""
+FRW plotting utility (rights-free).
+
+Two modes:
+  1) --mode surface : 3D surface of proper radius R(t, χ) = a(t) χ for flat FRW
+                      using a simple de Sitter–like scale factor a(t) = exp(H t).
+  2) --mode scale   : 2D plot of H(a) for a flat ΛCDM toy model.
+
+Examples:
+  python code/frw_plot.py
+  python code/frw_plot.py --mode surface --t-max 6 --H 0.3 --chi-max 3.5 --out docs/frw_surface.png
+  python code/frw_plot.py --mode scale --H0 70 --omega-m 0.3 --omega-l 0.7 --out docs/frw_H_of_a.png
+"""
+
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+
+def plot_surface(t_max=5.0, H=0.35, chi_max=3.0, nt=120, nchi=80, out="docs/frw_surface.png"):
+    t = np.linspace(0.0, t_max, nt)
+    chi = np.linspace(0.0, chi_max, nchi)
+    a = np.exp(H * t)                # de Sitter–like scale factor
+    T, X = np.meshgrid(t, chi, indexing='ij')
+    R = a[:, None] * X               # proper radius R(t, χ)
+
+    # 3D surface (no seaborn; default matplotlib)
+    fig = plt.figure(figsize=(10, 6), dpi=180)
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(T, X, R, rstride=2, cstride=2, linewidth=0, antialiased=True, alpha=0.9)
+
+    ax.set_xlabel('Cosmic time t (arb.)')
+    ax.set_ylabel('Comoving radius χ')
+    ax.set_zlabel('Proper radius R = a(t) χ')
+    ax.set_title('FRW (k=0): R(t, χ) with a(t)=e^{Ht}')
+    ax.view_init(elev=22, azim=-55)
+    plt.tight_layout()
+    _ensure_parent(out)
+    plt.savefig(out, bbox_inches='tight')
+    print(f"Saved: {out}")
+
+def plot_scale(H0=70.0, omega_m=0.3, omega_l=0.7, out="docs/frw_H_of_a.png"):
+    # Flat ΛCDM toy: H(a) = H0 sqrt(Ω_m / a^3 + Ω_Λ)
+    a = np.linspace(0.02, 2.0, 400)  # from early times to future expansion
+    H = H0 * np.sqrt(omega_m / a**3 + omega_l)
+
+    plt.figure(figsize=(8, 5), dpi=180)
+    plt.plot(a, H, lw=2)
+    plt.xlabel("Scale factor a")
+    plt.ylabel("H(a) [km s⁻¹ Mpc⁻¹]")
+    plt.title("Flat ΛCDM toy model: H(a) = H₀ √(Ωₘ/a³ + Ω_Λ)")
+    plt.grid(True, alpha=0.4)
+    plt.tight_layout()
+    _ensure_parent(out)
+    plt.savefig(out, bbox_inches='tight')
+    print(f"Saved: {out}")
+
+def _ensure_parent(path):
+    import os
+    parent = os.path.dirname(path)
+    if parent and not os.path.exists(parent):
+        os.makedirs(parent, exist_ok=True)
+
+def main():
+    p = argparse.ArgumentParser(description="FRW plotting utility (PCI-friendly, rights-free).")
+    p.add_argument("--mode", choices=["surface", "scale"], default="surface",
+                   help="Plot type: 3D 'surface' of R(t,χ) or 2D 'scale' H(a).")
+    # Surface options
+    p.add_argument("--t-max", type=float, default=5.0, help="Max time for surface plot.")
+    p.add_argument("--H", type=float, default=0.35, help="H parameter for a(t)=exp(H t).")
+    p.add_argument("--chi-max", type=float, default=3.0, help="Max comoving radius χ.")
+    # Scale options
+    p.add_argument("--H0", type=float, default=70.0, help="Present Hubble constant (km/s/Mpc).")
+    p.add_argument("--omega-m", type=float, default=0.3, help="Matter density parameter Ω_m.")
+    p.add_argument("--omega-l", type=float, default=0.7, help="Cosmological constant parameter Ω_Λ.")
+    # Common
+    p.add_argument("--out", type=str, default="docs/frw_surface.png", help="Output image path.")
+    args = p.parse_args()
+
+    if args.mode == "surface":
+        plot_surface(t_max=args.t_max, H=args.H, chi_max=args.chi_max, out=args.out)
+    else:
+        plot_scale(H0=args.H0, omega_m=args.omega_m, omega_l=args.omega_l, out=args.out)
+
+if __name__ == "__main__":
+    main()
