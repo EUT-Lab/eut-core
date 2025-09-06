@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+title: "Einstein Unified Theory (EUT) — Core Foundations"
+message: "If you use this software or its formal definitions, please cite this record."
+type: software
+version: 0.1.1
+date-released: 2025-09-05
+authors:
+  - family-names: Mercer
+    given-names: Jason
+repository-code: "https://github.com/EUT-Lab/eut-core"
+keywords:
+  - EUT
+  - unified field theory
+  - harmonic resonance
+  - E8
+  - mathematical physics
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.17065804
+license: MIT
